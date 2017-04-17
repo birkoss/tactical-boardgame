@@ -58,9 +58,9 @@ Tactical.Game.prototype = {
             for (let j=0; j<neighboors.length; j++) {
                 this.createCost(neighboors[j].x, neighboors[j].y, 5);
             }
-            console.log(neighboors);
         }
     },
+    /* Create a COST icon and label in a tile */
     createCost(costX, costY, costValue) {
         let coin = this.markers.create(0, 0, 'gui:cost-' + (costValue == 1 ? "primary" : "secondary"));
         coin.scale.setTo(RATIO, RATIO);
@@ -76,6 +76,7 @@ Tactical.Game.prototype = {
 
         this.markers.addChild(cost);
     },
+    /* Get all available neighboors to a cell */
     findNeighboors(cellX, cellY) {
         let neighboors = new Array();
 
