@@ -8,6 +8,8 @@ Tactical.Game.prototype = {
         this.createTiles();
 
         this.markers = this.game.add.group();
+        this.units = this.game.add.group();
+
         this.createInterface();
 
     },
@@ -24,6 +26,9 @@ Tactical.Game.prototype = {
                 tile.x = x * (tile.width + 3);
                 tile.y = y * (tile.height + 3);
 
+                tile.gridX = x;
+                tile.gridY = y;
+
                 tile.inputEnabled = true;
             }
         }
@@ -33,16 +38,17 @@ Tactical.Game.prototype = {
     },
     createInterface() {
         this.interface = this.game.add.group();
-        let background = this.interface.create(0, this.tiles.y + this.tiles.height + this.tiles.y, 'gui:position');
-        background.x = (this.game.width - background.width) / 2;
 
-        this.positions = new Array();
-        this.positions.push( Math.floor((Math.random() * 6) + 1) );
-        this.positions.push( Math.floor((Math.random() * 6) + 1) );
-        let bmpText = this.game.add.bitmapText(background.x + 76, background.y + (background.height/2) - 4, 'font:gui', this.positions[0], 8);
-        bmpText = this.game.add.bitmapText(background.x + 156, background.y + (background.height/2) - 4, 'font:gui', this.positions[1], 8);
+        let interfaceX = (this.game.width/2);
+        let interfaceY = (this.tiles.y * 2) + this.tiles.height;
 
-        this.createMarkers();
+        let spinner = new Spinner(this.game, (interfaceX/2) - 50, interfaceY);
+        this.interface.addChild(spinner);
+
+        spinner = new Spinner(this.game, interfaceX + this.interface.getChildAt(0).x - 50, interfaceY);
+        this.interface.addChild(spinner);
+
+        //this.createMarkers();
     },
     createMarkers() {
         this.markers.removeAll();
@@ -106,7 +112,34 @@ Tactical.Game.prototype = {
 
         return neighboors;
     },
-    onTileClicked(tile, pointer) {
+    createUnit(tileX, tileY, sprite) {
+        let tileSize = this.tiles.getChildAt(0).width + 3;
+
         this.markers.removeAll();
+        let unit = new Unit(this.game, this.tiles.x + (tileX * tileSize), this.tiles.y + (tileY * tileSize), 'peon');
+        this.units.addChild(unit);
+    },
+    disableTilesClick() {
+        for (let i=0; i<this.tiles.length; i++) {
+            this.tiles.getChildAt(i).events.onInputDown.removeAll();
+        }
+    },
+    disableTilesFading() {
+        for (let i=0; i<this.tiles.length; i++) {
+            this.tiles.getChildAt(i).alpha = 1;
+        }
+    },
+    hideInterface() {
+        console.log(this.interface);
+        console.log(this.interface.x);
+        console.log(this.interface.width);
+        let tween = this.game.add.tween(this.interface).to({x:-this.game.width}, 130).start();
+    },
+    /* Event called when a tile is clicked by the active player */
+    onTileClicked(tile, pointer) {
+        this.createUnit(tile.gridX, tile.gridY, 'peon');
+        this.disableTilesClick();
+        this.disableTilesFading();
+        this.hideInterface();
     }
 };

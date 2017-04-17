@@ -14,7 +14,10 @@ Tactical.Preload.prototype = {
         this.load.image('gui:cost-primary', 'images/money-primary.png');
         this.load.image('gui:cost-secondary', 'images/money-secondary.png');
 
-        this.load.spritesheet('player', 'images/player.png', 16, 16);
+        this.load.image('spinner:wheel', 'images/spinner/wheel.png');
+        this.load.image('spinner:pin', 'images/spinner/pin.png');
+
+        this.load.spritesheet('unit:peon', 'images/units/peon.png', 16, 16);
 
         this.load.bitmapFont('font:gui', 'images/fonts/gui.png', 'images/fonts/gui.xml');
 
