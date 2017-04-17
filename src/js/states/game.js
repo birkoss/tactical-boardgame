@@ -23,6 +23,8 @@ Tactical.Game.prototype = {
                 tile.scale.setTo(RATIO, RATIO);
                 tile.x = x * (tile.width + 3);
                 tile.y = y * (tile.height + 3);
+
+                tile.inputEnabled = true;
             }
         }
 
@@ -45,6 +47,10 @@ Tactical.Game.prototype = {
     createMarkers() {
         this.markers.removeAll();
 
+        for (let i=0; i<this.tiles.length; i++) {
+            this.tiles.getChildAt(i).alpha = 0.7;
+        }
+
         let main = new Array();
         main.push({x:this.positions[0], y:this.positions[1]});
         if (main[0].x != main[0].y) {
@@ -53,10 +59,12 @@ Tactical.Game.prototype = {
 
         for (let i=0; i<main.length; i++) {
             this.createCost(main[i].x, main[i].y, 1);
+            this.tiles.getChildAt(((main[i].y-1)*6)+(main[i].x-1)).alpha = 1;
             let neighboors = this.findNeighboors(main[i].x, main[i].y);
 
             for (let j=0; j<neighboors.length; j++) {
                 this.createCost(neighboors[j].x, neighboors[j].y, 5);
+                this.tiles.getChildAt(((neighboors[j].y-1)*6)+(neighboors[j].x-1)).alpha = 1;
             }
         }
     },
@@ -75,6 +83,10 @@ Tactical.Game.prototype = {
         cost.y = coin.y + (coin.height/2) - 8;
 
         this.markers.addChild(cost);
+
+        /* Also add a click marker on the tile */
+        let tileIndex = ((costY-1) * 6) + (costX-1);
+        this.tiles.getChildAt(tileIndex).events.onInputDown.add(this.onTileClicked, this);
     },
     /* Get all available neighboors to a cell */
     findNeighboors(cellX, cellY) {
@@ -93,5 +105,8 @@ Tactical.Game.prototype = {
         }
 
         return neighboors;
+    },
+    onTileClicked(tile, pointer) {
+        this.markers.removeAll();
     }
 };
