@@ -12,11 +12,44 @@ Tactical.Game.prototype = {
 
         this.createInterface();
 
-        this.showInterface();
+        this.currentTurn = 1;
+        this.currentTurn = 0;
+        this.nextTurn();
     },
     update: function() {
     },
 
+    nextTurn() {
+        this.currentTurn ^= 1;
+
+        this.showInterface();
+    },
+    endTurn() {
+        this.hideInterface();
+        this.disableTilesClick();
+        this.disableTilesFading();
+
+        this.nextTurn();
+    },
+    AIPickTile() {
+        let primaryTiles = new Array();
+        let secondaryTiles = new Array();
+
+        this.markers.forEach(function(item) {
+            if (item.text != undefined) {
+                let position = {x:item.gridX-1, y:item.gridY-1};
+                if (item.text == "1") {
+                    primaryTiles.push(position);
+                } else {
+                    secondaryTiles.push(position);
+                }
+            }
+        });
+
+        /* @TODO: Better AI (Oh rly!!!) */
+        this.createUnit(primaryTiles[0].x, primaryTiles[0].y, 'skeleton');
+        this.endTurn();
+    },
     createTiles() {
         this.tiles = this.game.add.group();
 
@@ -64,9 +97,6 @@ Tactical.Game.prototype = {
         this.markers.removeAll();
 
         this.fadeTiles();
-/*
-
-        */
     },
     fadeTiles() {
         this.tilesFaded = 0;
@@ -103,13 +133,18 @@ Tactical.Game.prototype = {
                         /* Get all neighboors */
                         let neighboors = new Array();
                         tiles.forEach(function(item) {
+                            /* @TODO: Pick only UNIQUE cell */
+                            /* @TODO: Pick cell without an unit present */
                             let newNeighboors = this.findNeighboors(item.x, item.y);
                             neighboors = neighboors.concat(newNeighboors);
                         }, this);
 
                         this.highlightTiles(neighboors, 5);
                     } else {
-                        console.log("ALL DONE!!!");
+                        /* If it's the AI turn */
+                        if (this.currentTurn == 1) {
+                            this.AIPickTile();
+                        }
                     }
                 }
             }, this);
@@ -126,14 +161,18 @@ Tactical.Game.prototype = {
         coin.y += ((costY-1) * (coin.height+3));
 
         let cost = this.game.add.bitmapText(0, 0, 'font:gui', costValue, 16);
+        cost.gridX = costX;
+        cost.gridY = costY;
         cost.x = coin.x + (coin.width/2) + 0;
         cost.y = coin.y + (coin.height/2) - 8;
 
         this.markers.addChild(cost);
 
         /* Also add a click marker on the tile */
-        let tileIndex = ((costY-1) * 6) + (costX-1);
-        this.tiles.getChildAt(tileIndex).events.onInputDown.add(this.onTileClicked, this);
+        if (this.currentTurn == 0) {
+            let tileIndex = ((costY-1) * 6) + (costX-1);
+            this.tiles.getChildAt(tileIndex).events.onInputDown.add(this.onTileClicked, this);
+        }
     },
     /* Get all available neighboors to a cell */
     findNeighboors(cellX, cellY) {
@@ -157,7 +196,7 @@ Tactical.Game.prototype = {
         let tileSize = this.tiles.getChildAt(0).width + 3;
 
         this.markers.removeAll();
-        let unit = new Unit(this.game, this.tiles.x + (tileX * tileSize), this.tiles.y + (tileY * tileSize), 'peon');
+        let unit = new Unit(this.game, this.tiles.x + (tileX * tileSize), this.tiles.y + (tileY * tileSize), sprite);
         this.units.addChild(unit);
     },
     disableTilesClick() {
@@ -185,11 +224,8 @@ Tactical.Game.prototype = {
     },
     /* Event called when a tile is clicked by the active player */
     onTileClicked(tile, pointer) {
-        this.hideInterface();
         this.createUnit(tile.gridX, tile.gridY, 'peon');
-        this.disableTilesClick();
-        this.disableTilesFading();
-        this.showInterface();
+        this.endTurn();
     },
     /* Event called when a dice stop rolling */
     onDiceRollStopped(dice, value) {
