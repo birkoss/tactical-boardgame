@@ -44,18 +44,17 @@ Tactical.Game.prototype = {
         let interfaceX = (this.game.width/2);
         let interfaceY = (this.tiles.y * 2) + this.tiles.height;
 
-        let spinner = new Spinner(this.game, (interfaceX/2) - 50, interfaceY);
-        spinner.onSpinStopped.add(this.onSpinnerStopped, this);
-        spinner.originalX = spinner.x;
-        spinner.outsideX = spinner.x - this.game.width;
-        this.interface.addChild(spinner);
+        let dice = new Dice(this.game, (interfaceX/2)-35, interfaceY);
+        dice.originalX = dice.x;
+        dice.outsideX = dice.x - this.game.width;
+        dice.onRollStopped.add(this.onDiceRollStopped, this);
+        this.interface.addChild(dice);
 
-        spinner = new Spinner(this.game, interfaceX + this.interface.getChildAt(0).x - 50, interfaceY);
-        spinner.onSpinStopped.add(this.onSpinnerStopped, this);
-        spinner.originalX = spinner.x;
-        console.log(spinner.x);
-        spinner.outsideX = spinner.x + this.game.width;
-        this.interface.addChild(spinner);
+        dice = new Dice(this.game, interfaceX + this.interface.getChildAt(0).x - 35, interfaceY);
+        dice.originalX = dice.x;
+        dice.outsideX = dice.x + this.game.width;
+        dice.onRollStopped.add(this.onDiceRollStopped, this);
+        this.interface.addChild(dice);
 
         this.interface.forEach(function(item) {
             item.x = item.outsideX;
@@ -161,9 +160,8 @@ Tactical.Game.prototype = {
         this.disableTilesFading();
         this.showInterface();
     },
-    onSpinnerStopped(spinner, prize) {
-        this.positions.push(prize);
-
+    onDiceRollStopped(dice, value) {
+        this.positions.push(value);
         if (this.positions.length >= 2) {
             this.createMarkers();
         }

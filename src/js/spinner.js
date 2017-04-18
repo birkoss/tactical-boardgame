@@ -58,6 +58,7 @@ Spinner.prototype.stop = function() {
 }
 
 Spinner.prototype.onStopped = function() {
+    console.log("onStopped...");
     this.canSpin = true;
     this.value.text = Spinner.PRIZES[this.prize];
 
@@ -65,6 +66,7 @@ Spinner.prototype.onStopped = function() {
 };
 
 Spinner.prototype.onLoop = function() {
+    console.log('onLoop');
     if (this.degrees >= 0) {
         console.log('onLoop done...');
         var loop = this.game.rnd.between(2, 4);

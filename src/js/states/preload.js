@@ -19,6 +19,8 @@ Tactical.Preload.prototype = {
 
         this.load.spritesheet('unit:peon', 'images/units/peon.png', 16, 16);
 
+        this.load.spritesheet('dice', 'images/dice.png', 70, 70);
+
         this.load.bitmapFont('font:gui', 'images/fonts/gui.png', 'images/fonts/gui.xml');
 
     },
