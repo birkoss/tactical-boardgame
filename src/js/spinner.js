@@ -15,11 +15,14 @@ function Spinner(game, x, y) {
     this.inputEnabled = true;
 
     this.canSpin = true;
-    this.events.onInputDown.add(this.spin, this);
+    this.events.onInputDown.add(this.stop, this);
+    //this.events.onInputDown.add(this.spin, this);
 
     this.value = this.game.add.bitmapText(-8, -7, 'font:gui', '', 16);
     this.value.tint = 0x000000;
     this.addChild(this.value);
+
+    this.onSpinStopped = new Phaser.Signal();
 }
 
 Spinner.prototype = Object.create(Phaser.Sprite.prototype);
@@ -28,10 +31,17 @@ Spinner.prototype.constructor = Spinner;
 Spinner.SLICES = 6;
 Spinner.PRIZES = [3, 4, 5, 6, 1, 2];
 
+Spinner.prototype.init = function() {
+    this.degrees = -1;
+    this.tween = this.game.add.tween(this.getChildAt(0)).to({angle:360}, 800, Phaser.Easing.Linear.None, this).loop();
+    this.tween.onLoop.add(this.onLoop, this);
+    this.value.text = "";
+};
+
 Spinner.prototype.spin = function() {
     if (this.canSpin) {
         this.canSpin = false;
-        var loop = this.game.rnd.between(2, 4);
+        var loop = 1;//this.game.rnd.between(2, 4);
 
         var degrees = this.game.rnd.between(0, 360);
 
@@ -42,7 +52,23 @@ Spinner.prototype.spin = function() {
     }
 };
 
+Spinner.prototype.stop = function() {
+    this.degrees = this.game.rnd.between(0, 360);
+    this.prize = Spinner.SLICES - 1 - Math.floor(this.degrees / (360 / Spinner.SLICES));
+}
+
 Spinner.prototype.onStopped = function() {
     this.canSpin = true;
     this.value.text = Spinner.PRIZES[this.prize];
+
+    this.onSpinStopped.dispatch(this, this.value.text);
+};
+
+Spinner.prototype.onLoop = function() {
+    if (this.degrees >= 0) {
+        console.log('onLoop done...');
+        var loop = this.game.rnd.between(2, 4);
+        this.tween.stop();
+        this.spin();
+    }
 };

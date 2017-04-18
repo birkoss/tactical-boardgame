@@ -12,6 +12,7 @@ Tactical.Game.prototype = {
 
         this.createInterface();
 
+        this.showInterface();
     },
     update: function() {
     },
@@ -38,17 +39,27 @@ Tactical.Game.prototype = {
     },
     createInterface() {
         this.interface = this.game.add.group();
+        this.positions = new Array();
 
         let interfaceX = (this.game.width/2);
         let interfaceY = (this.tiles.y * 2) + this.tiles.height;
 
         let spinner = new Spinner(this.game, (interfaceX/2) - 50, interfaceY);
+        spinner.onSpinStopped.add(this.onSpinnerStopped, this);
+        spinner.originalX = spinner.x;
+        spinner.outsideX = spinner.x - this.game.width;
         this.interface.addChild(spinner);
 
         spinner = new Spinner(this.game, interfaceX + this.interface.getChildAt(0).x - 50, interfaceY);
+        spinner.onSpinStopped.add(this.onSpinnerStopped, this);
+        spinner.originalX = spinner.x;
+        console.log(spinner.x);
+        spinner.outsideX = spinner.x + this.game.width;
         this.interface.addChild(spinner);
 
-        //this.createMarkers();
+        this.interface.forEach(function(item) {
+            item.x = item.outsideX;
+        }, this);
     },
     createMarkers() {
         this.markers.removeAll();
@@ -130,16 +141,31 @@ Tactical.Game.prototype = {
         }
     },
     hideInterface() {
-        console.log(this.interface);
-        console.log(this.interface.x);
-        console.log(this.interface.width);
-        let tween = this.game.add.tween(this.interface).to({x:-this.game.width}, 130).start();
+        this.interface.forEach(function(item) {
+            let tween = this.game.add.tween(item).to({x:item.outsideX}, 530, Phaser.Easing.Bounce.Out).start();
+        }, this);
+    },
+    showInterface() {
+        this.positions = new Array();
+
+        this.interface.forEach(function(item) {
+            item.init();
+            let tween = this.game.add.tween(item).to({x:item.originalX}, 530, Phaser.Easing.Bounce.Out).start();
+        }, this);
     },
     /* Event called when a tile is clicked by the active player */
     onTileClicked(tile, pointer) {
+        this.hideInterface();
         this.createUnit(tile.gridX, tile.gridY, 'peon');
         this.disableTilesClick();
         this.disableTilesFading();
-        this.hideInterface();
+        this.showInterface();
+    },
+    onSpinnerStopped(spinner, prize) {
+        this.positions.push(prize);
+
+        if (this.positions.length >= 2) {
+            this.createMarkers();
+        }
     }
 };
