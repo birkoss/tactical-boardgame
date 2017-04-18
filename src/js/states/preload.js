@@ -18,6 +18,7 @@ Tactical.Preload.prototype = {
         this.load.image('spinner:pin', 'images/spinner/pin.png');
 
         this.load.spritesheet('unit:peon', 'images/units/peon.png', 16, 16);
+        this.load.spritesheet('unit:skeleton', 'images/units/skeleton.png', 16, 16);
 
         this.load.spritesheet('dice', 'images/dice.png', 70, 70);
 
