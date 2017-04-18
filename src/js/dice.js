@@ -11,11 +11,13 @@ function Dice(game, x, y) {
 Dice.prototype = Object.create(Phaser.Sprite.prototype);
 Dice.prototype.constructor = Dice;
 
+Dice.ROLLS = 2;
+
 Dice.prototype.init = function() {
     let values = Phaser.ArrayUtils.numberArray(0, 5);
 
     let frames = new Array();
-    for (let i=0; i<3; i++) {
+    for (let i=0; i<Dice.ROLLS; i++) {
         /* Always be sure that NO number are the same when 2 loops are merged */
         let newFrames = new Array();
         do {
