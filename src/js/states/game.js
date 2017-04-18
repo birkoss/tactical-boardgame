@@ -46,9 +46,12 @@ Tactical.Game.prototype = {
             }
         });
 
-        /* @TODO: Better AI (Oh rly!!!) */
-        this.createUnit(primaryTiles[0].x, primaryTiles[0].y, 'skeleton');
-        this.endTurn();
+        /* Add a delay before letting the AI pick a tile */
+        this.game.time.events.add(Phaser.Timer.SECOND * 1, function() {
+            /* @TODO: Better AI (Oh rly!!!) */
+            this.createUnit(primaryTiles[0].x, primaryTiles[0].y, 'skeleton');
+            this.endTurn();
+        }, this);
     },
     createTiles() {
         this.tiles = this.game.add.group();
