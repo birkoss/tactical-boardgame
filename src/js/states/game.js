@@ -63,26 +63,57 @@ Tactical.Game.prototype = {
     createMarkers() {
         this.markers.removeAll();
 
+        this.fadeTiles();
+/*
+
+        */
+    },
+    fadeTiles() {
+        this.tilesFaded = 0;
         for (let i=0; i<this.tiles.length; i++) {
-            this.tiles.getChildAt(i).alpha = 0.7;
-        }
+            let tween = this.game.add.tween(this.tiles.getChildAt(i)).to({alpha:0.7}, 200).start();
+            tween.onComplete.add(function(item) {
+                this.tilesFaded++;
+                if (this.tilesFaded >= this.tiles.length) {
+                    this.tilesFaded = 0;
 
-        let main = new Array();
-        main.push({x:this.positions[0], y:this.positions[1]});
-        if (main[0].x != main[0].y) {
-            main.push({x:this.positions[1], y:this.positions[0]});
-        }
+                    let primary = new Array();
+                    primary.push({x:this.positions[0], y:this.positions[1]});
+                    if (primary[0].x != primary[0].y) {
+                        primary.push({x:this.positions[1], y:this.positions[0]});
+                    }
 
-        for (let i=0; i<main.length; i++) {
-            this.createCost(main[i].x, main[i].y, 1);
-            this.tiles.getChildAt(((main[i].y-1)*6)+(main[i].x-1)).alpha = 1;
-            let neighboors = this.findNeighboors(main[i].x, main[i].y);
-
-            for (let j=0; j<neighboors.length; j++) {
-                this.createCost(neighboors[j].x, neighboors[j].y, 5);
-                this.tiles.getChildAt(((neighboors[j].y-1)*6)+(neighboors[j].x-1)).alpha = 1;
-            }
+                    this.highlightTiles(primary, 1);
+                }
+            }, this);
         }
+    },
+    highlightTiles(tiles, costValue) {
+        this.tilesFaded = 0;
+        tiles.forEach(function(item) {
+            let tween = this.game.add.tween(this.tiles.getChildAt(((item.y-1)*6)+(item.x-1))).to({alpha: 1}, 200).start();
+            tween.onComplete.add(function() {
+                this.createCost(item.x, item.y, costValue);
+                this.tilesFaded++;
+
+                if (this.tilesFaded >= tiles.length) {
+                    /* Find secondary tiles */
+                    if (costValue == 1) {
+                        
+                        /* Get all neighboors */
+                        let neighboors = new Array();
+                        tiles.forEach(function(item) {
+                            let newNeighboors = this.findNeighboors(item.x, item.y);
+                            neighboors = neighboors.concat(newNeighboors);
+                        }, this);
+
+                        this.highlightTiles(neighboors, 5);
+                    } else {
+                        console.log("ALL DONE!!!");
+                    }
+                }
+            }, this);
+        }, this);
     },
     /* Create a COST icon and label in a tile */
     createCost(costX, costY, costValue) {
@@ -160,6 +191,7 @@ Tactical.Game.prototype = {
         this.disableTilesFading();
         this.showInterface();
     },
+    /* Event called when a dice stop rolling */
     onDiceRollStopped(dice, value) {
         this.positions.push(value);
         if (this.positions.length >= 2) {
