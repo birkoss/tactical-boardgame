@@ -13,7 +13,7 @@ Tactical.Game.prototype = {
         this.createInterface();
 
         this.currentTurn = 1;
-        this.currentTurn = 0;
+        //this.currentTurn = 0;
         this.nextTurn();
     },
     update: function() {
@@ -21,6 +21,7 @@ Tactical.Game.prototype = {
 
     nextTurn() {
         this.currentTurn ^= 1;
+        this.currentTurn = 0;
 
         this.showInterface();
     },
@@ -57,8 +58,8 @@ Tactical.Game.prototype = {
     createTiles() {
         this.tiles = this.game.add.group();
 
-        for (let x=0; x<6; x++) {
-            for (let y=0; y<6; y++) {
+        for (let y=0; y<6; y++) {
+            for (let x=0; x<6; x++) {
                 let tile = this.tiles.create(x, y, 'tile:grass');
                 tile.scale.setTo(RATIO, RATIO);
                 tile.x = x * (tile.width + 3);
@@ -67,7 +68,8 @@ Tactical.Game.prototype = {
                 tile.gridX = x;
                 tile.gridY = y;
 
-                tile.inputEnabled = true;
+                tile.inputEnabled = false;
+                tile.events.onInputDown.add(this.onTileClicked, this);
             }
         }
 
@@ -98,61 +100,141 @@ Tactical.Game.prototype = {
         }, this);
     },
     createMarkers() {
+        /* Be sure no markers are present, should not be, but to be sure ... */
         this.markers.removeAll();
+
+        let tiles = new Array();
+
+        /* Get primary tile */
+        tiles.push({x:this.positions[0], y:this.positions[1], cost:1, free:true});
+        if (this.positions[0] != this.positions[1]) {
+            tiles.push({x:this.positions[1], y:this.positions[0], cost:1, free:true});
+        }
+
+        /* Get secondary tile */
+        tiles.forEach(function(item) {
+            this.findNeighboors(item.x, item.y).forEach(function(neighboor) {
+                let isUnique = true;
+                tiles.forEach(function(tile) {
+                    if (tile.x == neighboor.x && tile.y == neighboor.y) {
+                        isUnique = false;
+                    }
+                }, this);
+                if (isUnique) {
+                    tiles.push({x:neighboor.x, y:neighboor.y, cost:5, free:true});
+                }
+            }, this);
+        }, this);
+
+        /* No units there ? */
+        tiles = tiles.filter(function(tile) {
+            let isFree = true;
+            this.units.forEach(function(unit) {
+                if (unit.gridX == tile.x-1 && unit.gridY == tile.y-1) {
+                    isFree = false;
+                }
+            }, this);
+            return isFree;
+        }, this);
+
+        tiles.forEach(function(tile) {
+            this.createCost(tile.x, tile.y, tile.cost);
+        }, this);
 
         this.fadeTiles();
     },
     fadeTiles() {
-        this.tilesFaded = 0;
+        let tilesFaded = 0;
         for (let i=0; i<this.tiles.length; i++) {
             let tween = this.game.add.tween(this.tiles.getChildAt(i)).to({alpha:0.7}, 200).start();
             tween.onComplete.add(function(item) {
-                this.tilesFaded++;
-                if (this.tilesFaded >= this.tiles.length) {
-                    this.tilesFaded = 0;
-
-                    let primary = new Array();
-                    primary.push({x:this.positions[0], y:this.positions[1]});
-                    if (primary[0].x != primary[0].y) {
-                        primary.push({x:this.positions[1], y:this.positions[0]});
-                    }
-
-                    this.highlightTiles(primary, 1);
+                tilesFaded++;
+                if (tilesFaded >= this.tiles.length) {
+                    this.highlightTiles(1);
                 }
             }, this);
         }
     },
-    highlightTiles(tiles, costValue) {
-        this.tilesFaded = 0;
-        tiles.forEach(function(item) {
-            let tween = this.game.add.tween(this.tiles.getChildAt(((item.y-1)*6)+(item.x-1))).to({alpha: 1}, 200).start();
-            tween.onComplete.add(function() {
-                this.createCost(item.x, item.y, costValue);
-                this.tilesFaded++;
+    highlightTiles(costValue) {
+        let tilesFadedCount = tilesFadedTotal = 0;
 
-                if (this.tilesFaded >= tiles.length) {
-                    /* Find secondary tiles */
-                    if (costValue == 1) {
-                        
-                        /* Get all neighboors */
-                        let neighboors = new Array();
-                        tiles.forEach(function(item) {
-                            /* @TODO: Pick only UNIQUE cell */
-                            /* @TODO: Pick cell without an unit present */
-                            let newNeighboors = this.findNeighboors(item.x, item.y);
-                            neighboors = neighboors.concat(newNeighboors);
-                        }, this);
+        this.markers.forEach(function(item) {
+            if (item.value === costValue) {
+                tilesFadedTotal++;
+                let tween = this.game.add.tween(this.tiles.getChildAt(((item.gridY-1)*6)+(item.gridX-1))).to({alpha: 1}, 200).start();
+                tween.onComplete.add(function() {
+                    if (++tilesFadedCount >= tilesFadedTotal) {
+                        this.showMarkers(costValue);
+                    }
+                }, this);
+            }
+        }, this);
 
-                        this.highlightTiles(neighboors, 5);
-                    } else {
-                        /* If it's the AI turn */
-                        if (this.currentTurn == 1) {
-                            this.AIPickTile();
+        if (tilesFadedTotal == 0) {
+            console.log("Skipping...");
+            this.showMarkers(costValue);
+        }
+    },
+    showMarkers(costValue) {
+        let markersCount = markersTotal = 0;
+
+        this.markers.forEach(function(item) {
+            if (item.value === costValue) {
+                markersTotal++;
+
+                this.game.add.tween(item.coin).to({alpha:1}, 200).start();
+                let tween = this.game.add.tween(item).to({alpha: 1}, 200).start();
+                tween.onComplete.add(function() {
+                    if (++markersCount >= markersTotal) {
+                        console.log("DONE!!!");
+                        if (costValue == 1 ) {
+                            this.highlightTiles(5);
+                        } else {
+                            console.log("ALL DONE!!");
                         }
                     }
-                }
-            }, this);
+                }, this);
+            }
         }, this);
+
+        /* @TODO: Better factoring */
+        if (markersTotal == 0) {
+            if (costValue == 1 ) {
+                this.highlightTiles(5);
+            } else {
+                console.log("ALL DONE!!");
+            }
+        }
+
+
+            /*
+            if (this.isFree) {
+                this.tilesFadedTotal++;
+
+                let tween = this.game.add.tween(this.tiles.getChildAt(((item.y-1)*6)+(item.x-1))).to({alpha: 1}, 200).start();
+                tween.onComplete.add(function() {
+                    this.createCost(item.x, item.y, costValue);
+                    this.tilesFaded++;
+
+                    if (this.tilesFaded >= tiles.length) {
+                        if (costValue == 1) {
+
+                            let neighboors = new Array();
+                            tiles.forEach(function(item) {
+                                let newNeighboors = this.findNeighboors(item.x, item.y);
+                                neighboors = neighboors.concat(newNeighboors);
+                            }, this);
+
+                            this.highlightTiles(neighboors, 5);
+                        } else {
+                            if (this.currentTurn == 1) {
+                                this.AIPickTile();
+                            }
+                        }
+                    }
+                }, this);
+            }
+            */
     },
     /* Create a COST icon and label in a tile */
     createCost(costX, costY, costValue) {
@@ -160,22 +242,27 @@ Tactical.Game.prototype = {
         coin.scale.setTo(RATIO, RATIO);
         coin.x = this.tiles.x;
         coin.y = this.tiles.y;
-
         coin.x += ((costX-1) * (coin.width+3));
         coin.y += ((costY-1) * (coin.height+3));
+        coin.alpha = 0;
 
         let cost = this.game.add.bitmapText(0, 0, 'font:gui', costValue, 16);
         cost.gridX = costX;
+        cost.value = costValue;
         cost.gridY = costY;
         cost.x = coin.x + (coin.width/2) + 0;
         cost.y = coin.y + (coin.height/2) - 8;
-
         this.markers.addChild(cost);
+        cost.alpha = 0;
 
-        /* Also add a click marker on the tile */
+        /* Cross-over for quick reference */
+        coin.cost = cost;
+        cost.coin = coin;
+
+        /* If it's the player's turn, enable click */
         if (this.currentTurn == 0) {
             let tileIndex = ((costY-1) * 6) + (costX-1);
-            this.tiles.getChildAt(tileIndex).events.onInputDown.add(this.onTileClicked, this);
+            this.tiles.getChildAt(tileIndex).inputEnabled = true;
         }
     },
     /* Get all available neighboors to a cell */
@@ -200,6 +287,8 @@ Tactical.Game.prototype = {
         let tileSize = this.tiles.getChildAt(0).width + 3;
 
         let unit = new Unit(this.game, this.tiles.x + (tileX * tileSize), this.tiles.y + (tileY * tileSize), sprite);
+        unit.gridX = tileX;
+        unit.gridY = tileY;
         this.units.addChild(unit);
 
         let emitter = this.game.add.emitter(unit.x + 12, unit.y, 25);
@@ -220,7 +309,8 @@ Tactical.Game.prototype = {
     },
     disableTilesClick() {
         for (let i=0; i<this.tiles.length; i++) {
-            this.tiles.getChildAt(i).events.onInputDown.removeAll();
+            //this.tiles.getChildAt(i).events.onInputDown.remove(this.onTileClicked, this);
+            this.tiles.getChildAt(i).inputEnabled = false;
         }
     },
     disableTilesFading() {
@@ -243,6 +333,7 @@ Tactical.Game.prototype = {
     },
     /* Event called when a tile is clicked by the active player */
     onTileClicked(tile, pointer) {
+        console.log('Clicked: ' + tile.gridX + "x" + tile.gridY);
         this.createUnit(tile.gridX, tile.gridY, 'peon');
         this.endTurn();
     },
@@ -250,6 +341,7 @@ Tactical.Game.prototype = {
     onDiceRollStopped(dice, value) {
         this.positions.push(value);
         if (this.positions.length >= 2) {
+            this.positions = [2, 1];
             this.createMarkers();
         }
     }
