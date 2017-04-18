@@ -28,6 +28,7 @@ Tactical.Game.prototype = {
         this.hideInterface();
         this.disableTilesClick();
         this.disableTilesFading();
+        this.hideMarkers();
 
         this.nextTurn();
     },
@@ -198,9 +199,13 @@ Tactical.Game.prototype = {
     createUnit(tileX, tileY, sprite) {
         let tileSize = this.tiles.getChildAt(0).width + 3;
 
-        this.markers.removeAll();
         let unit = new Unit(this.game, this.tiles.x + (tileX * tileSize), this.tiles.y + (tileY * tileSize), sprite);
         this.units.addChild(unit);
+    },
+    hideMarkers() {
+        this.markers.forEach(function(item) {
+            this.game.add.tween(item).to({alpha:0}, 100).start();
+        }, this);
     },
     disableTilesClick() {
         for (let i=0; i<this.tiles.length; i++) {
@@ -209,7 +214,7 @@ Tactical.Game.prototype = {
     },
     disableTilesFading() {
         for (let i=0; i<this.tiles.length; i++) {
-            this.tiles.getChildAt(i).alpha = 1;
+            this.game.add.tween(this.tiles.getChildAt(i)).to({alpha:1}).start();
         }
     },
     hideInterface() {
