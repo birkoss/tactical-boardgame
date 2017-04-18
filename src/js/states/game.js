@@ -201,6 +201,20 @@ Tactical.Game.prototype = {
 
         let unit = new Unit(this.game, this.tiles.x + (tileX * tileSize), this.tiles.y + (tileY * tileSize), sprite);
         this.units.addChild(unit);
+
+        let emitter = this.game.add.emitter(unit.x + 12, unit.y, 25);
+        emitter.makeParticles('gui:cost-primary');
+
+        emitter.minParticleScale = emitter.maxParticleScale = RATIO;
+        let speed = 100;
+
+        emitter.minParticleSpeed.setTo(speed * -1, speed * -1);
+        emitter.maxParticleSpeed.setTo(speed, speed);
+
+        emitter.minRotation = 0;
+        emitter.maxRotation = 0;
+
+        emitter.start(true, 500, null, 10);
     },
     hideMarkers() {
         this.markers.forEach(function(item) {
