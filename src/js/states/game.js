@@ -8,8 +8,8 @@ Tactical.Game.prototype = {
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
         this.panelContainer = this.game.add.group();
-        this.tiles = this.game.add.group();
-        this.units = this.game.add.group();
+        this.tilesContainer = this.game.add.group();
+        this.unitsContainer = this.game.add.group();
         this.markersContainer = this.game.add.group();
 
         this.createPanel();
@@ -20,7 +20,7 @@ Tactical.Game.prototype = {
         this.nextTurn();
     },
     update() {
-        this.game.physics.arcade.overlap(this.units.children, this.units.children, this.onUnitsOverlap, null, this);
+        this.game.physics.arcade.overlap(this.unitsContainer.children, this.unitsContainer.children, this.onUnitsOverlap, null, this);
     },
 
     nextTurn() {
@@ -37,7 +37,7 @@ Tactical.Game.prototype = {
         this.resolveMap();
     },
     resolveMap() {
-        let attacker = this.units.children[this.units.children.length - 1];
+        let attacker = this.unitsContainer.children[this.unitsContainer.children.length - 1];
 
         /* Setup our directions */
         let directions = [{x:-1, y:0}, {x:1, y:0}, {x:0, y:-1}, {x:0, y:1}];
@@ -56,7 +56,7 @@ Tactical.Game.prototype = {
                     let newY = attacker.gridY + (direction.y * i);
 
                     if (newX >= 0 && newY >= 0 && newX < 6 && newY < 6) {
-                        this.units.forEach(function(unit) {
+                        this.unitsContainer.forEach(function(unit) {
                             if (unit.gridX == newX && unit.gridY == newY && unit.isAlive) {
                                 if (unit.player == attacker.player) {
                                     direction.complete = true;
@@ -143,7 +143,7 @@ Tactical.Game.prototype = {
         this.positions = new Array();
 
         let interfaceX = (this.game.width/2);
-        let interfaceY = (this.tiles.y * 2) + this.tiles.height;
+        let interfaceY = (this.tilesContainer.y * 2) + this.tilesContainer.height;
 
         let dice = new Dice(this.game, (interfaceX/2)-35, interfaceY);
         dice.originalX = dice.x;
@@ -190,7 +190,7 @@ Tactical.Game.prototype = {
 
         /* No units there ? */
         this.markers.forEach(function(tile) {
-            this.units.forEach(function(unit) {
+            this.unitsContainer.forEach(function(unit) {
                 if (unit.gridX == tile.x-1 && unit.gridY == tile.y-1 && unit.isAlive) {
                     tile.free = false;
                 }
@@ -208,11 +208,11 @@ Tactical.Game.prototype = {
     },
     fadeOutTiles() {
         let tilesFaded = 0;
-        for (let i=0; i<this.tiles.length; i++) {
-            let tween = this.game.add.tween(this.tiles.getChildAt(i)).to({alpha:0.7}, 200).start();
+        for (let i=0; i<this.tilesContainer.length; i++) {
+            let tween = this.game.add.tween(this.tilesContainer.getChildAt(i)).to({alpha:0.7}, 200).start();
             tween.onComplete.add(function(item) {
                 tilesFaded++;
-                if (tilesFaded >= this.tiles.length) {
+                if (tilesFaded >= this.tilesContainer.length) {
                     this.fadeInTiles(1);
                 }
             }, this);
@@ -224,7 +224,7 @@ Tactical.Game.prototype = {
         this.markers.forEach(function(item) {
             if (item.cost === costValue) {
                 tilesFadedTotal++;
-                let tween = this.game.add.tween(this.tiles.getChildAt(((item.y-1)*6)+(item.x-1))).to({alpha: 1}, 200).start();
+                let tween = this.game.add.tween(this.tilesContainer.getChildAt(((item.y-1)*6)+(item.x-1))).to({alpha: 1}, 200).start();
                 tween.onComplete.add(function() {
                     if (++tilesFadedCount >= tilesFadedTotal) {
                         this.showMarkers(costValue);
@@ -269,8 +269,8 @@ Tactical.Game.prototype = {
     createCost(costX, costY, costValue) {
         let coin = this.markersContainer.create(0, 0, 'gui:cost-' + (costValue == 1 ? "primary" : "secondary"));
         coin.scale.setTo(RATIO, RATIO);
-        coin.x = this.tiles.x;
-        coin.y = this.tiles.y;
+        coin.x = this.tilesContainer.x;
+        coin.y = this.tilesContainer.y;
         coin.x += ((costX-1) * (coin.width+3));
         coin.y += ((costY-1) * (coin.height+3));
         coin.alpha = 0;
@@ -291,7 +291,7 @@ Tactical.Game.prototype = {
         /* If it's the player's turn, enable click */
         if (this.currentTurn == 0) {
             let tileIndex = ((costY-1) * 6) + (costX-1);
-            this.tiles.getChildAt(tileIndex).inputEnabled = true;
+            this.tilesContainer.getChildAt(tileIndex).inputEnabled = true;
         }
     },
     /* Get all available neighboors to a cell */
@@ -313,22 +313,22 @@ Tactical.Game.prototype = {
         return neighboors;
     },
     createUnit(tileX, tileY, sprite) {
-        console.log('createUnit1: ' + this.units.children.length);
+        console.log('createUnit1: ' + this.unitsContainer.children.length);
         /* Remove the old unit */
         let oldUnit = this.getUnitAtGrid(tileX, tileY);
         if (oldUnit != null) {
             oldUnit.destroy();
         }
-        console.log('createUnit2: ' + this.units.children.length);
+        console.log('createUnit2: ' + this.unitsContainer.children.length);
 
-        let tileSize = this.tiles.getChildAt(0).width + 3;
+        let tileSize = this.tilesContainer.getChildAt(0).width + 3;
 
-        let unit = new Unit(this.game, this.tiles.x + (tileX * tileSize), this.tiles.y + (tileY * tileSize), sprite);
+        let unit = new Unit(this.game, this.tilesContainer.x + (tileX * tileSize), this.tilesContainer.y + (tileY * tileSize), sprite);
         unit.gridX = tileX;
         unit.gridY = tileY;
         unit.player = this.currentTurn;
         unit.onDead.add(this.onUnitDead, this);
-        this.units.addChild(unit);
+        this.unitsContainer.addChild(unit);
 
         let emitter = this.game.add.emitter(unit.x + 12, unit.y, 25);
         emitter.makeParticles('gui:cost-primary');
@@ -347,14 +347,14 @@ Tactical.Game.prototype = {
         }, this);
     },
     disableTilesClick() {
-        for (let i=0; i<this.tiles.length; i++) {
-            //this.tiles.getChildAt(i).events.onInputDown.remove(this.onTileClicked, this);
-            this.tiles.getChildAt(i).inputEnabled = false;
+        for (let i=0; i<this.tilesContainer.length; i++) {
+            //this.tilesContainer.getChildAt(i).events.onInputDown.remove(this.onTileClicked, this);
+            this.tilesContainer.getChildAt(i).inputEnabled = false;
         }
     },
     disableTilesFading() {
-        for (let i=0; i<this.tiles.length; i++) {
-            this.game.add.tween(this.tiles.getChildAt(i)).to({alpha:1}).start();
+        for (let i=0; i<this.tilesContainer.length; i++) {
+            this.game.add.tween(this.tilesContainer.getChildAt(i)).to({alpha:1}).start();
         }
     },
     hideInterface() {
@@ -372,7 +372,7 @@ Tactical.Game.prototype = {
     },
     getUnitAtGrid(gridX, gridY) {
         let single_unit = null;
-        this.units.forEach(function(unit) {
+        this.unitsContainer.forEach(function(unit) {
             if (unit.gridX == gridX && unit.gridY == gridY) {
                 single_unit = unit
             }
@@ -391,7 +391,7 @@ Tactical.Game.prototype = {
 
         for (let y=0; y<6; y++) {
             for (let x=0; x<6; x++) {
-                let tile = this.tiles.create(x, y, 'tile:grass');
+                let tile = this.tilesContainer.create(x, y, 'tile:grass');
                 tile.scale.setTo(RATIO, RATIO);
                 tile.x = x * (tile.width + 3);
                 tile.y = y * (tile.height + 3);
@@ -404,8 +404,8 @@ Tactical.Game.prototype = {
             }
         }
 
-        this.tiles.x = (this.game.width - this.tiles.width) / 2;
-        this.tiles.y = this.tiles.x + this.panelContainer.height;
+        this.tilesContainer.x = (this.game.width - this.tilesContainer.width) / 2;
+        this.tilesContainer.y = this.tilesContainer.x + this.panelContainer.height;
     },
 
     /* Events */
