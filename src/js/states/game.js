@@ -22,6 +22,9 @@ Tactical.Game.prototype = {
     },
     update() {
         this.game.physics.arcade.overlap(this.unitsContainer.children, this.unitsContainer.children, this.onUnitsOverlap, null, this);
+
+        this.playerUnits.setText(this.players[0].units + "/18");
+        this.playerCoins.setText(this.players[0].coins);
     },
 
     nextTurn() {
@@ -314,13 +317,17 @@ Tactical.Game.prototype = {
         return neighboors;
     },
     createUnit(tileX, tileY, sprite) {
-        console.log('createUnit1: ' + this.unitsContainer.children.length);
+        /* Reduce the cost */
+        let marker = this.getMarkerAtGrid(tileX+1, tileY+1);
+        if (marker != null) {
+            this.players[this.currentTurn].removeCoins(marker.value);
+        }
+
         /* Remove the old unit */
         let oldUnit = this.getUnitAtGrid(tileX, tileY);
         if (oldUnit != null) {
             oldUnit.destroy();
         }
-        console.log('createUnit2: ' + this.unitsContainer.children.length);
 
         let tileSize = this.tilesContainer.getChildAt(0).width + 3;
 
@@ -341,6 +348,8 @@ Tactical.Game.prototype = {
         emitter.minRotation = emitter.maxRotation = 0;
 
         emitter.start(true, 500, null, 20);
+
+        this.updateUnits();
     },
     hideMarkers() {
         this.markersContainer.forEach(function(item) {
@@ -371,6 +380,15 @@ Tactical.Game.prototype = {
             let tween = this.game.add.tween(item).to({x:item.originalX}, 530, Phaser.Easing.Bounce.Out).start();
         }, this);
     },
+    getMarkerAtGrid(gridX, gridY) {
+        let single_marker = null;
+        this.markersContainer.forEach(function(marker) {
+            if (marker.value != undefined && marker.gridX == gridX && marker.gridY == gridY) {
+                single_marker = marker
+            }
+        }, this);
+        return single_marker;
+    },
     getUnitAtGrid(gridX, gridY) {
         let single_unit = null;
         this.unitsContainer.forEach(function(unit) {
@@ -379,6 +397,26 @@ Tactical.Game.prototype = {
             }
         }, this);
         return single_unit;
+    },
+
+    /* Updators */
+
+    updateUnits() {
+        let unitsTotals = new Array();
+
+        this.players.forEach(function(player) {
+            unitsTotals.push(0);
+        }, this);
+        
+        this.unitsContainer.forEach(function(unit) {
+            if (unit.isAlive) {
+                unitsTotals[unit.player]++;
+            }
+        }, this);
+
+        this.players.forEach(function(player, index) {
+            player.setUnits(unitsTotals[index]);
+        }, this);
     },
 
     /* Creators */
@@ -394,19 +432,19 @@ Tactical.Game.prototype = {
         coin.y = background.height/2 - coin.height/2;
         coin.x = padding;
 
-        let playerCoin = this.game.add.bitmapText(coin.x + coin.width, (background.height/2), 'font:gui', 100, 16);
-        playerCoin.anchor.set(0, 0.5);
-        this.panelContainer.addChild(playerCoin);
+        this.playerCoins = this.game.add.bitmapText(coin.x + coin.width, (background.height/2), 'font:gui', 100, 16);
+        this.playerCoins.anchor.set(0, 0.5);
+        this.panelContainer.addChild(this.playerCoins);
 
         let units = this.panelContainer.create(0, 0, 'panel:units');
         units.scale.setTo(RATIO, RATIO);
         units.x = background.width - units.width - padding;
         units.y = background.height/2 - units.height/2;
 
-        let playerUnits = this.game.add.bitmapText(0, (background.height/2), 'font:gui', '0/18', 16);
-        playerUnits.anchor.set(1, 0.5);
-        playerUnits.x = units.x - padding;
-        this.panelContainer.addChild(playerUnits);
+        this.playerUnits = this.game.add.bitmapText(0, (background.height/2), 'font:gui', '0/18', 16);
+        this.playerUnits.anchor.set(1, 0.5);
+        this.playerUnits.x = units.x - padding;
+        this.panelContainer.addChild(this.playerUnits);
     },
     createPlayers() {
         this.players = new Array();
