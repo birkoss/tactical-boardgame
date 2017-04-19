@@ -77,6 +77,7 @@ Tactical.Game.prototype = {
             if (direction.attacker != null) {
                 validAttack++;
 
+                /* @TODO: Update the gridX, gridY */
                 this.game.add.tween(attacker).to({x:direction.attacker.x, y:direction.attacker.y}, 500).start();
                 this.game.add.tween(direction.attacker).to({x:attacker.x, y:attacker.y}, 500).start();
             }
@@ -310,6 +311,7 @@ Tactical.Game.prototype = {
         unit.gridX = tileX;
         unit.gridY = tileY;
         unit.player = this.currentTurn;
+        unit.onDead.add(this.onUnitDead, this);
         this.units.addChild(unit);
 
         let emitter = this.game.add.emitter(unit.x + 12, unit.y, 25);
@@ -367,11 +369,15 @@ Tactical.Game.prototype = {
     },
     onUnitsOverlap(unit1, unit2) {
         if (unit1.player != unit2.player) {
-            unit2.kill();
-            console.log(unit1);
-            console.log(unit2);
-
-            console.log('...................');
+            if (unit2.player != this.currentTurn) {
+                unit2.die();
+            } else if (unit1.player != this.currentTurn) {
+                unit1.die();
+            }
         }
+    },
+    onUnitDead(unit, state) {
+        console.log('Remove this unit!');
+        console.log(unit);
     }
 };
