@@ -21,7 +21,6 @@ Tactical.Game.prototype = {
 
     nextTurn() {
         this.currentTurn ^= 1;
-        this.currentTurn = 0;
 
         this.showInterface();
     },
@@ -135,27 +134,28 @@ Tactical.Game.prototype = {
             }, this);
         }, this);
 
+        /* Create the non-occupied markers */
         this.markers.forEach(function(tile) {
             if (tile.free) {
                 this.createCost(tile.x, tile.y, tile.cost);
             }
         }, this);
 
-        this.fadeTiles();
+        this.fadeOutTiles();
     },
-    fadeTiles() {
+    fadeOutTiles() {
         let tilesFaded = 0;
         for (let i=0; i<this.tiles.length; i++) {
             let tween = this.game.add.tween(this.tiles.getChildAt(i)).to({alpha:0.7}, 200).start();
             tween.onComplete.add(function(item) {
                 tilesFaded++;
                 if (tilesFaded >= this.tiles.length) {
-                    this.highlightTiles(1);
+                    this.fadeInTiles(1);
                 }
             }, this);
         }
     },
-    highlightTiles(costValue) {
+    fadeInTiles(costValue) {
         let tilesFadedCount = tilesFadedTotal = 0;
 
         this.markers.forEach(function(item) {
@@ -169,11 +169,6 @@ Tactical.Game.prototype = {
                 }, this);
             }
         }, this);
-
-        if (tilesFadedTotal == 0) {
-            console.log("Skipping...");
-            this.showMarkers(costValue);
-        }
     },
     showMarkers(costValue) {
         let markersCount = markersTotal = 0;
@@ -186,55 +181,26 @@ Tactical.Game.prototype = {
                 let tween = this.game.add.tween(item).to({alpha: 1}, 200).start();
                 tween.onComplete.add(function() {
                     if (++markersCount >= markersTotal) {
-                        console.log("DONE!!!");
-                        if (costValue == 1 ) {
-                            this.highlightTiles(5);
-                        } else {
-                            console.log("ALL DONE!!");
-                        }
+                        this.markersVisible(costValue);
                     }
                 }, this);
             }
         }, this);
 
-        /* @TODO: Better factoring */
+        /* When no markers are free ... */
         if (markersTotal == 0) {
-            if (costValue == 1 ) {
-                this.highlightTiles(5);
-            } else {
-                console.log("ALL DONE!!");
+            this.markersVisible(costValue);
+        }
+    },
+    markersVisible(costValue) {
+        if (costValue == 1 ) {
+            this.fadeInTiles(5);
+        } else {
+            if (this.currentTurn == 1) {
+                this.AIPickTile();
             }
         }
 
-
-            /*
-            if (this.isFree) {
-                this.tilesFadedTotal++;
-
-                let tween = this.game.add.tween(this.tiles.getChildAt(((item.y-1)*6)+(item.x-1))).to({alpha: 1}, 200).start();
-                tween.onComplete.add(function() {
-                    this.createCost(item.x, item.y, costValue);
-                    this.tilesFaded++;
-
-                    if (this.tilesFaded >= tiles.length) {
-                        if (costValue == 1) {
-
-                            let neighboors = new Array();
-                            tiles.forEach(function(item) {
-                                let newNeighboors = this.findNeighboors(item.x, item.y);
-                                neighboors = neighboors.concat(newNeighboors);
-                            }, this);
-
-                            this.highlightTiles(neighboors, 5);
-                        } else {
-                            if (this.currentTurn == 1) {
-                                this.AIPickTile();
-                            }
-                        }
-                    }
-                }, this);
-            }
-            */
     },
     /* Create a COST icon and label in a tile */
     createCost(costX, costY, costValue) {
