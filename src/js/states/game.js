@@ -15,7 +15,6 @@ Tactical.Game.prototype = {
         this.createInterface();
 
         this.currentTurn = 1;
-        //this.currentTurn = 0;
         this.nextTurn();
     },
     update() {
@@ -41,9 +40,10 @@ Tactical.Game.prototype = {
         /* Setup our directions */
         let directions = [{x:-1, y:0}, {x:1, y:0}, {x:0, y:-1}, {x:0, y:1}];
         directions.forEach(function(direction) {
+            direction.unit1 = attacker;
             direction.enemy = 0;
             direction.complete = false;
-            direction.attacker = null;
+            direction.unit2 = null;
         }, this);
 
         /* Let's do it ! */
@@ -58,7 +58,7 @@ Tactical.Game.prototype = {
                             if (unit.gridX == newX && unit.gridY == newY) {
                                 if (unit.player == attacker.player) {
                                     direction.complete = true;
-                                    direction.attacker = unit;
+                                    direction.unit2 = unit;
                                 } else {
                                     direction.enemy++;
                                 }
@@ -72,19 +72,27 @@ Tactical.Game.prototype = {
             }, this);
         }
 
-        let validAttack = 0;
-        directions.forEach(function(direction) {
-            if (direction.attacker != null) {
-                validAttack++;
-
-                /* @TODO: Update the gridX, gridY */
-                this.game.add.tween(attacker).to({x:direction.attacker.x, y:direction.attacker.y}, 500).start();
-                this.game.add.tween(direction.attacker).to({x:attacker.x, y:attacker.y}, 500).start();
-            }
+        this.actions = directions.filter(function(direction) {
+            return direction.unit2 != null;
         }, this);
 
-        if (validAttack == 0) {
+        console.log(this.actions);
+
+        this.executeActions();
+    },
+    executeActions() {
+        if (this.actions.length == 0) {
             this.nextTurn();
+        } else {
+            let action = this.actions.shift();
+
+            /* @TODO: Change the x-index to be sure the defender will be bellow all attackers */
+            /* @TODO: Update the gridX, gridY */
+            this.game.add.tween(action.unit1).to({x:action.unit2.x, y:action.unit2.y}, 500).start();
+            let tween = this.game.add.tween(action.unit2).to({x:action.unit1.x, y:action.unit1.y}, 500).start();
+            tween.onComplete.add(function() {
+                this.executeActions();
+            }, this);
         }
     },
     AIPickTile() {
@@ -367,6 +375,7 @@ Tactical.Game.prototype = {
             this.createMarkers();
         }
     },
+    /* Event called when 2 units overlap while attacking */
     onUnitsOverlap(unit1, unit2) {
         if (unit1.player != unit2.player) {
             if (unit2.player != this.currentTurn) {
@@ -376,8 +385,8 @@ Tactical.Game.prototype = {
             }
         }
     },
+    /* Event called when a unit is killed */
     onUnitDead(unit, state) {
-        console.log('Remove this unit!');
-        console.log(unit);
+
     }
 };
