@@ -12,6 +12,7 @@ Tactical.Game.prototype = {
         this.unitsContainer = this.game.add.group();
         this.markersContainer = this.game.add.group();
 
+        this.createPlayers();
         this.createPanel();
         this.createTiles();
         this.createInterface();
@@ -134,7 +135,7 @@ Tactical.Game.prototype = {
 
         /* Add a delay before letting the AI pick a tile */
         this.game.time.events.add(Phaser.Timer.SECOND * 1, function() {
-            this.createUnit(tileX, tileY, 'skeleton');
+            this.createUnit(tileX, tileY, this.players[this.currentTurn].sprite);
             this.endTurn();
         }, this);
     },
@@ -383,12 +384,37 @@ Tactical.Game.prototype = {
     /* Creators */
 
     createPanel() {
-        let background = this.panelContainer.create(0, 0, 'gui:position');
+        let padding = 10;
 
+        let background = this.panelContainer.create(0, 0, 'panel:background');
         background.width = this.game.width;
+
+        let coin = this.panelContainer.create(0, 0, 'panel:coins');
+        coin.scale.setTo(RATIO, RATIO);
+        coin.y = background.height/2 - coin.height/2;
+        coin.x = padding;
+
+        let playerCoin = this.game.add.bitmapText(coin.x + coin.width, (background.height/2), 'font:gui', 100, 16);
+        playerCoin.anchor.set(0, 0.5);
+        this.panelContainer.addChild(playerCoin);
+
+        let units = this.panelContainer.create(0, 0, 'panel:units');
+        units.scale.setTo(RATIO, RATIO);
+        units.x = background.width - units.width - padding;
+        units.y = background.height/2 - units.height/2;
+
+        let playerUnits = this.game.add.bitmapText(0, (background.height/2), 'font:gui', '0/18', 16);
+        playerUnits.anchor.set(1, 0.5);
+        playerUnits.x = units.x - padding;
+        this.panelContainer.addChild(playerUnits);
+    },
+    createPlayers() {
+        this.players = new Array();
+
+        this.players.push(new Player('peon'));
+        this.players.push(new Player('skeleton'));
     },
     createTiles() {
-
         for (let y=0; y<6; y++) {
             for (let x=0; x<6; x++) {
                 let tile = this.tilesContainer.create(x, y, 'tile:grass');
@@ -403,7 +429,6 @@ Tactical.Game.prototype = {
                 tile.events.onInputDown.add(this.onTileClicked, this);
             }
         }
-
         this.tilesContainer.x = (this.game.width - this.tilesContainer.width) / 2;
         this.tilesContainer.y = this.tilesContainer.x + this.panelContainer.height;
     },
@@ -412,7 +437,7 @@ Tactical.Game.prototype = {
 
     /* Event called when a tile is clicked by the active player */
     onTileClicked(tile, pointer) {
-        this.createUnit(tile.gridX, tile.gridY, 'peon');
+        this.createUnit(tile.gridX, tile.gridY, this.players[this.currentTurn].sprite);
         this.endTurn();
     },
     /* Event called when a dice stop rolling */

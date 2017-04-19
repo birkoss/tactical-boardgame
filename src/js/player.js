@@ -1,4 +1,5 @@
-function Player() {
+function Player(sprite) {
+    this.sprite = sprite;
     this.coins = 100;
 };
 
