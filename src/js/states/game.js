@@ -59,7 +59,10 @@ Tactical.Game.prototype = {
                             if (unit.gridX == newX && unit.gridY == newY && unit.isAlive) {
                                 if (unit.player == attacker.player) {
                                     direction.complete = true;
-                                    direction.unit2 = {x:unit.gridX, y:unit.gridY};
+                                    /* At least ONE enemy between both attackers */
+                                    if (direction.enemy > 0) {
+                                        direction.unit2 = {x:unit.gridX, y:unit.gridY};
+                                    }
                                 } else {
                                     direction.enemy++;
                                 }
@@ -329,11 +332,13 @@ Tactical.Game.prototype = {
         return neighboors;
     },
     createUnit(tileX, tileY, sprite) {
+        console.log('createUnit1: ' + this.units.children.length);
         /* Remove the old unit */
         let oldUnit = this.getUnitAtGrid(tileX, tileY);
         if (oldUnit != null) {
             oldUnit.destroy();
         }
+        console.log('createUnit2: ' + this.units.children.length);
 
         let tileSize = this.tiles.getChildAt(0).width + 3;
 
