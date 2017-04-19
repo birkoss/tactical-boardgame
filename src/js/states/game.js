@@ -31,7 +31,45 @@ Tactical.Game.prototype = {
         this.resolveMap();
     },
     resolveMap() {
+        let attacker = this.units.children[this.units.children.length - 1];
+
+        /* Setup our directions */
+        let directions = [{x:-1, y:0}, {x:1, y:0}, {x:0, y:-1}, {x:0, y:1}];
+        directions.forEach(function(direction) {
+            direction.enemy = 0;
+            direction.complete = false;
+            direction.attacker = null;
+        }, this);
+
+        /* Let's do it ! */
+        for (let i=1; i<6; i++) {
+            directions.forEach(function(direction) {
+                if (!direction.complete) {
+                    let newX = attacker.gridX + (direction.x * i);
+                    let newY = attacker.gridY + (direction.y * i);
+
+                    if (newX >= 0 && newY >= 0 && newX < 6 && newY < 6) {
+                        this.units.forEach(function(unit) {
+                            if (unit.gridX == newX && unit.gridY == newY) {
+                                if (unit.player == attacker.player) {
+                                    direction.complete = true;
+                                    direction.attacker = unit;
+                                } else {
+                                    direction.enemy++;
+                                }
+                            }
+                        }, this);
+                    } else {
+                        direction.complete = true;
+                        direction.enemy = 0;
+                    }
+                }
+            }, this);
+        }
+
+        console.log(directions);
         /* Check horizontal matches */
+        
 
         /* Check vertical matches */
 
@@ -260,6 +298,7 @@ Tactical.Game.prototype = {
         let unit = new Unit(this.game, this.tiles.x + (tileX * tileSize), this.tiles.y + (tileY * tileSize), sprite);
         unit.gridX = tileX;
         unit.gridY = tileY;
+        unit.player = this.currentTurn;
         this.units.addChild(unit);
 
         let emitter = this.game.add.emitter(unit.x + 12, unit.y, 25);
@@ -304,7 +343,6 @@ Tactical.Game.prototype = {
     },
     /* Event called when a tile is clicked by the active player */
     onTileClicked(tile, pointer) {
-        console.log('Clicked: ' + tile.gridX + "x" + tile.gridY);
         this.createUnit(tile.gridX, tile.gridY, 'peon');
         this.endTurn();
     },
