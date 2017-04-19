@@ -21,6 +21,8 @@ Tactical.Preload.prototype = {
         this.load.image('panel:coins', 'images/panel/coins.png');
         this.load.image('panel:units', 'images/panel/units.png');
 
+        this.load.image('dice:background', 'images/dice/background.png');
+
         this.load.spritesheet('unit:peon', 'images/units/peon.png', 16, 16);
         this.load.spritesheet('unit:skeleton', 'images/units/skeleton.png', 16, 16);
 
