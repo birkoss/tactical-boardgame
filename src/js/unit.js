@@ -7,6 +7,8 @@ function Unit(game, x, y, sprite) {
     this.x += this.width/2;
     this.y += this.height/2;
 
+    game.physics.enable(this);
+
     this.animations.add('idle', [0, 1], 2, true);
 
     this.animations.play('idle');

@@ -5,6 +5,8 @@ Tactical.Game = function() {};
 Tactical.Game.prototype = {
     /* Phaser */
     create: function() {
+        this.game.physics.startSystem(Phaser.Physics.ARCADE);
+
         this.createTiles();
 
         this.markersContainer = this.game.add.group();
@@ -15,6 +17,9 @@ Tactical.Game.prototype = {
         this.currentTurn = 1;
         //this.currentTurn = 0;
         this.nextTurn();
+    },
+    update() {
+        this.game.physics.arcade.overlap(this.units.children, this.units.children, this.onUnitsOverlap, null, this);
     },
 
     nextTurn() {
@@ -67,13 +72,19 @@ Tactical.Game.prototype = {
             }, this);
         }
 
-        console.log(directions);
-        /* Check horizontal matches */
-        
+        let validAttack = 0;
+        directions.forEach(function(direction) {
+            if (direction.attacker != null) {
+                validAttack++;
 
-        /* Check vertical matches */
+                this.game.add.tween(attacker).to({x:direction.attacker.x, y:direction.attacker.y}, 500).start();
+                this.game.add.tween(direction.attacker).to({x:attacker.x, y:attacker.y}, 500).start();
+            }
+        }, this);
 
-        this.nextTurn();
+        if (validAttack == 0) {
+            this.nextTurn();
+        }
     },
     AIPickTile() {
         let primaryTiles = new Array();
@@ -352,6 +363,15 @@ Tactical.Game.prototype = {
         if (this.positions.length >= 2) {
             this.positions = [2, 1];
             this.createMarkers();
+        }
+    },
+    onUnitsOverlap(unit1, unit2) {
+        if (unit1.player != unit2.player) {
+            unit2.kill();
+            console.log(unit1);
+            console.log(unit2);
+
+            console.log('...................');
         }
     }
 };
