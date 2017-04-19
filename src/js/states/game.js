@@ -6,13 +6,15 @@ Tactical.Game.prototype = {
     /* Phaser */
     create: function() {
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
-
+       
+        this.backgroundContainer = this.game.add.group();
         this.panelContainer = this.game.add.group();
         this.tilesContainer = this.game.add.group();
         this.unitsContainer = this.game.add.group();
         this.markersContainer = this.game.add.group();
         this.dicesContainer = this.game.add.group();
 
+        this.createBackground();
         this.createPlayers();
         this.createPanel();
         this.createTiles();
@@ -393,6 +395,11 @@ Tactical.Game.prototype = {
 
     /* Creators */
 
+    createBackground() {
+        let tiles = this.game.add.tileSprite(0, 0, this.game.width, this.game.height, 'tile:grass');
+        tiles.scale.setTo(RATIO, RATIO);
+        this.backgroundContainer.addChild(tiles);
+    },
     createDices() {
         let background = this.dicesContainer.create(0, 0, 'dices:background');
         background.width = this.game.width;
@@ -461,12 +468,14 @@ Tactical.Game.prototype = {
         this.players.push(new Player('skeleton'));
     },
     createTiles() {
+        let spacing = 3;
+
         for (let y=0; y<6; y++) {
             for (let x=0; x<6; x++) {
                 let tile = this.tilesContainer.create(x, y, 'tile:grass');
                 tile.scale.setTo(RATIO, RATIO);
-                tile.x = x * (tile.width + 3);
-                tile.y = y * (tile.height + 3);
+                tile.x = x * (tile.width + spacing);
+                tile.y = y * (tile.height + spacing);
 
                 tile.gridX = x;
                 tile.gridY = y;
@@ -477,6 +486,12 @@ Tactical.Game.prototype = {
         }
         this.tilesContainer.x = (this.game.width - this.tilesContainer.width) / 2;
         this.tilesContainer.y = this.tilesContainer.x + this.panelContainer.height;
+
+        let graphics = this.game.add.graphics(0, 0);
+        graphics.beginFill(0x000000);
+        graphics.drawRect(this.tilesContainer.x-spacing, this.tilesContainer.y-spacing, this.tilesContainer.width+(spacing*2), this.tilesContainer.height+(spacing*2));
+        graphics.endFill();
+        this.backgroundContainer.addChild(graphics);
     },
 
     /* Events */
