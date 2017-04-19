@@ -7,7 +7,7 @@ Tactical.Game.prototype = {
     create: function() {
         this.createTiles();
 
-        this.markers = this.game.add.group();
+        this.markersContainer = this.game.add.group();
         this.units = this.game.add.group();
 
         this.createInterface();
@@ -37,7 +37,7 @@ Tactical.Game.prototype = {
         let primaryTiles = new Array();
         let secondaryTiles = new Array();
 
-        this.markers.forEach(function(item) {
+        this.markersContainer.forEach(function(item) {
             if (item.text != undefined) {
                 let position = {x:item.gridX-1, y:item.gridY-1};
                 if (item.text == "1") {
@@ -101,44 +101,44 @@ Tactical.Game.prototype = {
     },
     createMarkers() {
         /* Be sure no markers are present, should not be, but to be sure ... */
-        this.markers.removeAll();
+        this.markersContainer.removeAll();
 
-        let tiles = new Array();
+        this.markers = new Array();
 
         /* Get primary tile */
-        tiles.push({x:this.positions[0], y:this.positions[1], cost:1, free:true});
+        this.markers.push({x:this.positions[0], y:this.positions[1], cost:1, free:true});
         if (this.positions[0] != this.positions[1]) {
-            tiles.push({x:this.positions[1], y:this.positions[0], cost:1, free:true});
+            this.markers.push({x:this.positions[1], y:this.positions[0], cost:1, free:true});
         }
 
         /* Get secondary tile */
-        tiles.forEach(function(item) {
+        this.markers.forEach(function(item) {
             this.findNeighboors(item.x, item.y).forEach(function(neighboor) {
                 let isUnique = true;
-                tiles.forEach(function(tile) {
+                this.markers.forEach(function(tile) {
                     if (tile.x == neighboor.x && tile.y == neighboor.y) {
                         isUnique = false;
                     }
                 }, this);
                 if (isUnique) {
-                    tiles.push({x:neighboor.x, y:neighboor.y, cost:5, free:true});
+                    this.markers.push({x:neighboor.x, y:neighboor.y, cost:5, free:true});
                 }
             }, this);
         }, this);
 
         /* No units there ? */
-        tiles = tiles.filter(function(tile) {
-            let isFree = true;
+        this.markers.forEach(function(tile) {
             this.units.forEach(function(unit) {
                 if (unit.gridX == tile.x-1 && unit.gridY == tile.y-1) {
-                    isFree = false;
+                    tile.free = false;
                 }
             }, this);
-            return isFree;
         }, this);
 
-        tiles.forEach(function(tile) {
-            this.createCost(tile.x, tile.y, tile.cost);
+        this.markers.forEach(function(tile) {
+            if (tile.free) {
+                this.createCost(tile.x, tile.y, tile.cost);
+            }
         }, this);
 
         this.fadeTiles();
@@ -159,9 +159,9 @@ Tactical.Game.prototype = {
         let tilesFadedCount = tilesFadedTotal = 0;
 
         this.markers.forEach(function(item) {
-            if (item.value === costValue) {
+            if (item.cost === costValue) {
                 tilesFadedTotal++;
-                let tween = this.game.add.tween(this.tiles.getChildAt(((item.gridY-1)*6)+(item.gridX-1))).to({alpha: 1}, 200).start();
+                let tween = this.game.add.tween(this.tiles.getChildAt(((item.y-1)*6)+(item.x-1))).to({alpha: 1}, 200).start();
                 tween.onComplete.add(function() {
                     if (++tilesFadedCount >= tilesFadedTotal) {
                         this.showMarkers(costValue);
@@ -178,7 +178,7 @@ Tactical.Game.prototype = {
     showMarkers(costValue) {
         let markersCount = markersTotal = 0;
 
-        this.markers.forEach(function(item) {
+        this.markersContainer.forEach(function(item) {
             if (item.value === costValue) {
                 markersTotal++;
 
@@ -238,7 +238,7 @@ Tactical.Game.prototype = {
     },
     /* Create a COST icon and label in a tile */
     createCost(costX, costY, costValue) {
-        let coin = this.markers.create(0, 0, 'gui:cost-' + (costValue == 1 ? "primary" : "secondary"));
+        let coin = this.markersContainer.create(0, 0, 'gui:cost-' + (costValue == 1 ? "primary" : "secondary"));
         coin.scale.setTo(RATIO, RATIO);
         coin.x = this.tiles.x;
         coin.y = this.tiles.y;
@@ -252,7 +252,7 @@ Tactical.Game.prototype = {
         cost.gridY = costY;
         cost.x = coin.x + (coin.width/2) + 0;
         cost.y = coin.y + (coin.height/2) - 8;
-        this.markers.addChild(cost);
+        this.markersContainer.addChild(cost);
         cost.alpha = 0;
 
         /* Cross-over for quick reference */
@@ -303,7 +303,7 @@ Tactical.Game.prototype = {
         emitter.start(true, 500, null, 20);
     },
     hideMarkers() {
-        this.markers.forEach(function(item) {
+        this.markersContainer.forEach(function(item) {
             this.game.add.tween(item).to({alpha:0}, 100).start();
         }, this);
     },
