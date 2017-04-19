@@ -28,7 +28,7 @@ Unit.prototype.die = function() {
     this.effect.scale.setTo(RATIO, RATIO);
     this.effect.anchor.set(0.5, 0.5);
 
-    this.effect.animations.add('attack', [0, 1, 0, 1, 0, 1], 4, false);
+    this.effect.animations.add('attack', [0, 1, 0, 1, 0, 1], 10, false);
     this.effect.animations.killOnComplete = true;
     this.effect.events.onAnimationComplete.add(this.onEffectCompleted, this);
 
