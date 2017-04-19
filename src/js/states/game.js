@@ -40,7 +40,7 @@ Tactical.Game.prototype = {
         /* Setup our directions */
         let directions = [{x:-1, y:0}, {x:1, y:0}, {x:0, y:-1}, {x:0, y:1}];
         directions.forEach(function(direction) {
-            direction.unit1 = attacker;
+            direction.unit1 = {x:attacker.gridX, y:attacker.gridY};
             direction.enemy = 0;
             direction.complete = false;
             direction.unit2 = null;
@@ -55,10 +55,10 @@ Tactical.Game.prototype = {
 
                     if (newX >= 0 && newY >= 0 && newX < 6 && newY < 6) {
                         this.units.forEach(function(unit) {
-                            if (unit.gridX == newX && unit.gridY == newY) {
+                            if (unit.gridX == newX && unit.gridY == newY && unit.isAlive) {
                                 if (unit.player == attacker.player) {
                                     direction.complete = true;
-                                    direction.unit2 = unit;
+                                    direction.unit2 = {x:unit.gridX, y:unit.gridY};
                                 } else {
                                     direction.enemy++;
                                 }
@@ -76,8 +76,6 @@ Tactical.Game.prototype = {
             return direction.unit2 != null;
         }, this);
 
-        console.log(this.actions);
-
         this.executeActions();
     },
     executeActions() {
@@ -87,9 +85,17 @@ Tactical.Game.prototype = {
             let action = this.actions.shift();
 
             /* @TODO: Change the x-index to be sure the defender will be bellow all attackers */
-            /* @TODO: Update the gridX, gridY */
-            this.game.add.tween(action.unit1).to({x:action.unit2.x, y:action.unit2.y}, 500).start();
-            let tween = this.game.add.tween(action.unit2).to({x:action.unit1.x, y:action.unit1.y}, 500).start();
+            let unit1 = this.getUnitAtGrid(action.unit1.x, action.unit1.y);
+            let unit2 = this.getUnitAtGrid(action.unit2.x, action.unit2.y);
+
+            /* Swap the tile's X/Y of both unit */
+            unit2.gridX = action.unit1.x;
+            unit2.gridY = action.unit1.y;
+            unit1.gridX = action.unit2.x;
+            unit1.gridY = action.unit2.y;
+
+            this.game.add.tween(unit1).to({x:unit2.x, y:unit2.y}, 500).start();
+            let tween = this.game.add.tween(unit2).to({x:unit1.x, y:unit1.y}, 500).start();
             tween.onComplete.add(function() {
                 this.executeActions();
             }, this);
@@ -110,10 +116,20 @@ Tactical.Game.prototype = {
             }
         });
 
+        /* @TODO: Better AI (Oh rly!!!) */
+        let tileX = 0;
+        let tileY = 0;
+        if (primaryTiles.length > 0) {
+            tileX = primaryTiles[0].x;
+            tileY = primaryTiles[0].y;
+        } else {
+            tileX = secondaryTiles[0].x;
+            tileY = secondaryTiles[0].y;
+        }
+
         /* Add a delay before letting the AI pick a tile */
         this.game.time.events.add(Phaser.Timer.SECOND * 1, function() {
-            /* @TODO: Better AI (Oh rly!!!) */
-            this.createUnit(primaryTiles[0].x, primaryTiles[0].y, 'skeleton');
+            this.createUnit(tileX, tileY, 'skeleton');
             this.endTurn();
         }, this);
     },
@@ -361,6 +377,15 @@ Tactical.Game.prototype = {
             item.init();
             let tween = this.game.add.tween(item).to({x:item.originalX}, 530, Phaser.Easing.Bounce.Out).start();
         }, this);
+    },
+    getUnitAtGrid(gridX, gridY) {
+        let single_unit = null;
+        this.units.forEach(function(unit) {
+            if (unit.gridX == gridX && unit.gridY == gridY) {
+                single_unit = unit
+            }
+        }, this);
+        return single_unit;
     },
     /* Event called when a tile is clicked by the active player */
     onTileClicked(tile, pointer) {
