@@ -150,9 +150,9 @@ Tactical.Game.prototype = {
         this.markers = new Array();
 
         /* Get primary tile */
-        this.markers.push({x:this.positions[0], y:this.positions[1], cost:1, free:true});
-        if (this.positions[0] != this.positions[1]) {
-            this.markers.push({x:this.positions[1], y:this.positions[0], cost:1, free:true});
+        this.markers.push({x:this.diceValues[0], y:this.diceValues[1], cost:1, free:true});
+        if (this.diceValues[0] != this.diceValues[1]) {
+            this.markers.push({x:this.diceValues[1], y:this.diceValues[0], cost:1, free:true});
         }
 
         /* Get secondary tile */
@@ -351,7 +351,7 @@ Tactical.Game.prototype = {
         }, this);
     },
     showInterface() {
-        this.positions = new Array();
+        this.diceValues = new Array();
 
         this.dices.forEach(function(item) {
             item.init();
@@ -405,8 +405,6 @@ Tactical.Game.prototype = {
 
         this.dicesContainer.y = this.tilesContainer.y + this.tilesContainer.x + this.tilesContainer.height;
         console.log(this.dicesContainer.y);
-
-        this.positions = new Array();
 
         this.dices = new Array();
 
@@ -497,9 +495,8 @@ Tactical.Game.prototype = {
     },
     /* Event called when a dice stop rolling */
     onDiceRollStopped(dice, value) {
-        this.positions.push(value);
-        if (this.positions.length >= 2) {
-            /* @DEBUG: Used to force a dice position */
+        this.diceValues.push(value);
+        if (this.diceValues.length >= this.dices.length) {
             this.createMarkers();
         }
     },
