@@ -16,8 +16,6 @@ Tactical.Game.prototype = {
         //this.currentTurn = 0;
         this.nextTurn();
     },
-    update: function() {
-    },
 
     nextTurn() {
         this.currentTurn ^= 1;
@@ -29,6 +27,13 @@ Tactical.Game.prototype = {
         this.disableTilesClick();
         this.disableTilesFading();
         this.hideMarkers();
+
+        this.resolveMap();
+    },
+    resolveMap() {
+        /* Check horizontal matches */
+
+        /* Check vertical matches */
 
         this.nextTurn();
     },
