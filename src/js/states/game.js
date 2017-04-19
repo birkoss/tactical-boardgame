@@ -5,14 +5,15 @@ Tactical.Game = function() {};
 Tactical.Game.prototype = {
     /* Phaser */
     create: function() {
+        this.game.physics.startSystem(Phaser.Physics.ARCADE);
+
+        this.panelContainer = this.game.add.group();
         this.tiles = this.game.add.group();
         this.units = this.game.add.group();
         this.markersContainer = this.game.add.group();
 
-        this.game.physics.startSystem(Phaser.Physics.ARCADE);
-
+        this.createPanel();
         this.createTiles();
-
         this.createInterface();
 
         this.currentTurn = 1;
@@ -136,26 +137,6 @@ Tactical.Game.prototype = {
             this.createUnit(tileX, tileY, 'skeleton');
             this.endTurn();
         }, this);
-    },
-    createTiles() {
-
-        for (let y=0; y<6; y++) {
-            for (let x=0; x<6; x++) {
-                let tile = this.tiles.create(x, y, 'tile:grass');
-                tile.scale.setTo(RATIO, RATIO);
-                tile.x = x * (tile.width + 3);
-                tile.y = y * (tile.height + 3);
-
-                tile.gridX = x;
-                tile.gridY = y;
-
-                tile.inputEnabled = false;
-                tile.events.onInputDown.add(this.onTileClicked, this);
-            }
-        }
-
-        this.tiles.x = (this.game.width - this.tiles.width) / 2;
-        this.tiles.y = this.tiles.x;
     },
     createInterface() {
         this.interface = this.game.add.group();
@@ -398,6 +379,37 @@ Tactical.Game.prototype = {
         }, this);
         return single_unit;
     },
+
+    /* Creators */
+
+    createPanel() {
+        let background = this.panelContainer.create(0, 0, 'gui:position');
+
+        background.width = this.game.width;
+    },
+    createTiles() {
+
+        for (let y=0; y<6; y++) {
+            for (let x=0; x<6; x++) {
+                let tile = this.tiles.create(x, y, 'tile:grass');
+                tile.scale.setTo(RATIO, RATIO);
+                tile.x = x * (tile.width + 3);
+                tile.y = y * (tile.height + 3);
+
+                tile.gridX = x;
+                tile.gridY = y;
+
+                tile.inputEnabled = false;
+                tile.events.onInputDown.add(this.onTileClicked, this);
+            }
+        }
+
+        this.tiles.x = (this.game.width - this.tiles.width) / 2;
+        this.tiles.y = this.tiles.x + this.panelContainer.height;
+    },
+
+    /* Events */
+
     /* Event called when a tile is clicked by the active player */
     onTileClicked(tile, pointer) {
         this.createUnit(tile.gridX, tile.gridY, 'peon');
