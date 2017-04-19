@@ -355,7 +355,7 @@ Tactical.Game.prototype = {
 
         this.dices.forEach(function(item) {
             item.init();
-            let tween = this.game.add.tween(item).to({x:item.originalX}, 530, Phaser.Easing.Bounce.Out).start();
+            let tween = this.game.add.tween(item).to({x:item.originalX + item.outsideX}, 230, Phaser.Easing.Bounce.Out).to({x:item.originalX - item.outsideX}, 230, Phaser.Easing.Bounce.Out).to({x:item.originalX}, 530, Phaser.Easing.Bounce.Out).start();
         }, this);
     },
     getMarkerAtGrid(gridX, gridY) {
@@ -416,7 +416,7 @@ Tactical.Game.prototype = {
         dice.x = background.width / 4;
         dice.y = background.height/2;
         dice.originalX = dice.x;
-        dice.outsideX = dice.x - this.game.width;
+        dice.outsideX =  -40;
         dice.onRollStopped.add(this.onDiceRollStopped, this);
         this.dicesContainer.addChild(dice);
         this.dices.push(dice);
@@ -426,14 +426,13 @@ Tactical.Game.prototype = {
         dice.x = background.width / 4 * 3;
         dice.y = background.height/2;
         dice.originalX = dice.x;
-        dice.outsideX = dice.x + this.game.width;
+        dice.outsideX = 40;
         dice.onRollStopped.add(this.onDiceRollStopped, this);
         this.dicesContainer.addChild(dice);
         this.dices.push(dice);
 
-        /* Hide the dices */
         this.dices.forEach(function(dice) {
-            dice.x = dice.outsideX;
+            //dice.x = dice.outsideX;
         }, this);
     },
     createPanel() {
