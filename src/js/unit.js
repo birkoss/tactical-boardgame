@@ -37,10 +37,12 @@ Unit.prototype.die = function() {
 
 Unit.prototype.onEffectCompleted = function() {
     this.effect.destroy();
-    this.onDead.dispatch(this, true);
 
     this.loadTexture('effect:dead');
     /* @TODO: Choose a random frame (0-3) */
 
     this.isAlive = false;
+    this.alpha = 0.5;
+
+    this.onDead.dispatch(this, true);
 };

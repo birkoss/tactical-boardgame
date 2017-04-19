@@ -31,10 +31,9 @@ Tactical.Game.prototype = {
     nextTurn() {
         this.currentTurn ^= 1;
 
-        this.showInterface();
+        this.rollDices();
     },
     endTurn() {
-        this.hideInterface();
         this.disableTilesClick();
         this.disableTilesFading();
         this.hideMarkers();
@@ -345,12 +344,7 @@ Tactical.Game.prototype = {
             this.game.add.tween(this.tilesContainer.getChildAt(i)).to({alpha:1}).start();
         }
     },
-    hideInterface() {
-        this.dicesContainer.forEach(function(item) {
-            let tween = this.game.add.tween(item).to({x:item.outsideX}, 530, Phaser.Easing.Bounce.Out).start();
-        }, this);
-    },
-    showInterface() {
+    rollDices() {
         this.diceValues = new Array();
 
         this.dices.forEach(function(item) {
