@@ -36,7 +36,6 @@ Unit.prototype.die = function() {
 };
 
 Unit.prototype.onEffectCompleted = function() {
-    console.log("on effect completed...");
     this.effect.destroy();
     this.onDead.dispatch(this, true);
 

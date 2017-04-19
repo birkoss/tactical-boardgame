@@ -5,12 +5,13 @@ Tactical.Game = function() {};
 Tactical.Game.prototype = {
     /* Phaser */
     create: function() {
+        this.tiles = this.game.add.group();
+        this.units = this.game.add.group();
+        this.markersContainer = this.game.add.group();
+
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
         this.createTiles();
-
-        this.markersContainer = this.game.add.group();
-        this.units = this.game.add.group();
 
         this.createInterface();
 
@@ -134,7 +135,6 @@ Tactical.Game.prototype = {
         }, this);
     },
     createTiles() {
-        this.tiles = this.game.add.group();
 
         for (let y=0; y<6; y++) {
             for (let x=0; x<6; x++) {
@@ -207,7 +207,7 @@ Tactical.Game.prototype = {
         /* No units there ? */
         this.markers.forEach(function(tile) {
             this.units.forEach(function(unit) {
-                if (unit.gridX == tile.x-1 && unit.gridY == tile.y-1) {
+                if (unit.gridX == tile.x-1 && unit.gridY == tile.y-1 && unit.isAlive) {
                     tile.free = false;
                 }
             }, this);
@@ -329,6 +329,12 @@ Tactical.Game.prototype = {
         return neighboors;
     },
     createUnit(tileX, tileY, sprite) {
+        /* Remove the old unit */
+        let oldUnit = this.getUnitAtGrid(tileX, tileY);
+        if (oldUnit != null) {
+            oldUnit.destroy();
+        }
+
         let tileSize = this.tiles.getChildAt(0).width + 3;
 
         let unit = new Unit(this.game, this.tiles.x + (tileX * tileSize), this.tiles.y + (tileY * tileSize), sprite);
