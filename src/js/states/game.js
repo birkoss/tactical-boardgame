@@ -11,12 +11,12 @@ Tactical.Game.prototype = {
         this.tilesContainer = this.game.add.group();
         this.unitsContainer = this.game.add.group();
         this.markersContainer = this.game.add.group();
-        this.interfaceContainer = this.game.add.group();
+        this.dicesContainer = this.game.add.group();
 
         this.createPlayers();
         this.createPanel();
         this.createTiles();
-        this.createInterface();
+        this.createDices();
 
         this.currentTurn = 1;
         this.nextTurn();
@@ -346,15 +346,15 @@ Tactical.Game.prototype = {
         }
     },
     hideInterface() {
-        this.interfaceContainer.forEach(function(item) {
+        this.dicesContainer.forEach(function(item) {
             let tween = this.game.add.tween(item).to({x:item.outsideX}, 530, Phaser.Easing.Bounce.Out).start();
         }, this);
     },
     showInterface() {
         this.positions = new Array();
 
-        this.interfaceContainer.forEach(function(item) {
-            //item.init();
+        this.dices.forEach(function(item) {
+            item.init();
             let tween = this.game.add.tween(item).to({x:item.originalX}, 530, Phaser.Easing.Bounce.Out).start();
         }, this);
     },
@@ -399,15 +399,16 @@ Tactical.Game.prototype = {
 
     /* Creators */
 
-    createInterface() {
-        let background = this.interfaceContainer.create(0, 0, 'dice:background');
+    createDices() {
+        let background = this.dicesContainer.create(0, 0, 'dices:background');
         background.width = this.game.width;
 
-        this.interfaceContainer.y = this.tilesContainer.y + this.tilesContainer.x + this.tilesContainer.height;
+        this.dicesContainer.y = this.tilesContainer.y + this.tilesContainer.x + this.tilesContainer.height;
+        console.log(this.dicesContainer.y);
 
         this.positions = new Array();
 
-        let interfaceX = (this.game.width/2);
+        this.dices = new Array();
 
         let dice = new Dice(this.game, 0, 0);
         
@@ -419,8 +420,8 @@ Tactical.Game.prototype = {
         dice.originalX = dice.x;
         dice.outsideX = dice.x - this.game.width;
         dice.onRollStopped.add(this.onDiceRollStopped, this);
-        this.interfaceContainer.addChild(dice);
-
+        this.dicesContainer.addChild(dice);
+        this.dices.push(dice);
         
         dice = new Dice(this.game, 0, 0);
         dice.anchor.set(0.5, 0.5);
@@ -429,10 +430,12 @@ Tactical.Game.prototype = {
         dice.originalX = dice.x;
         dice.outsideX = dice.x + this.game.width;
         dice.onRollStopped.add(this.onDiceRollStopped, this);
-        this.interfaceContainer.addChild(dice);
+        this.dicesContainer.addChild(dice);
+        this.dices.push(dice);
 
-        this.interfaceContainer.forEach(function(item) {
-            item.x = item.outsideX;
+        /* Hide the dices */
+        this.dices.forEach(function(dice) {
+            dice.x = dice.outsideX;
         }, this);
     },
     createPanel() {

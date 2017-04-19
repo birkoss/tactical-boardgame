@@ -1,5 +1,5 @@
 function Dice(game, x, y) {
-    Phaser.Sprite.call(this, game, x, y, 'dice');
+    Phaser.Sprite.call(this, game, x, y, 'dices:dice');
 
     this.anchor.set(0.5);
     this.x += this.width / 2;
